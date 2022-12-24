@@ -161,7 +161,7 @@ let locationInDirection: tiles.Location = null
 let canMove = false
 let playerSprite: Sprite = null
 initConstants()
-tiles.setCurrentTilemap(tilemap`level2`)
+tiles.setCurrentTilemap(tilemap`level3`)
 playerSprite = sprites.create(img`
     . . . . . . f f f f f f . . . . 
     . . . . f f e e e e f 2 f . . . 
@@ -180,6 +180,6 @@ playerSprite = sprites.create(img`
     . . . . . . f f f f f f . . . . 
     . . . . . . . f f f . . . . . . 
     `, SpriteKind.Player)
-grid.place(playerSprite, tiles.getTileLocation(4, 3))
+grid.place(playerSprite, tiles.getTileLocation(6, 4))
 canMove = true
 info.setScore(0)

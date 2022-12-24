@@ -80,6 +80,28 @@
         ],
         "displayName": "level0"
     },
+    "level3": {
+        "id": "level3",
+        "mimeType": "application/mkcd-tilemap",
+        "data": "MTAwYTAwMGEwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMjAzMDQwMDAwMDAwMDAwMDAwMDA1MDEwZDAzMDMwMzA0MDAwMDAwMDUwMTAxMGMwYzBjMDkwMDAwMDAwNTBjMDgwODA4MGMwOTAwMDAwMDA1MGMwYzBjMGMwYjBhMDAwMDAwMDYwNzA3MDcwNzBhMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDIwMjIwMDAwMDAyMDIwMjIyMjAwMjAwMDAwMjAwMDIwMjAyMjIwMDAyMDAwMDAyMjAwMjAyMjIyMDIwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMDAwMA==",
+        "tileset": [
+            "myTiles.transparency16",
+            "myTiles.tile1",
+            "sprites.dungeon.greenOuterNorthWest",
+            "sprites.dungeon.greenOuterNorth0",
+            "sprites.dungeon.greenOuterNorthEast",
+            "sprites.dungeon.greenOuterWest0",
+            "sprites.dungeon.greenOuterSouthEast",
+            "sprites.dungeon.greenOuterSouth1",
+            "sprites.dungeon.stairLadder",
+            "sprites.dungeon.greenOuterEast0",
+            "sprites.dungeon.greenOuterSouthWest",
+            "sprites.dungeon.greenInnerNorthWest",
+            "sprites.dungeon.floorDark2",
+            "sprites.dungeon.greenInnerSouthWest"
+        ],
+        "displayName": "level3"
+    },
     "*": {
         "mimeType": "image/x-mkcd-f4",
         "dataEncoding": "base64",
