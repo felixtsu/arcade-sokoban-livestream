@@ -1,18 +1,18 @@
 function pushIfPossible (direction: number) {
     locationInDirection = grid.add(grid.getLocation(playerSprite), DIRECTION_VECTORS[direction][0], DIRECTION_VECTORS[direction][1])
     pushedLocationInDirection = grid.add(grid.getLocation(playerSprite), DIRECTION_VECTORS[direction][0] * 2, DIRECTION_VECTORS[direction][1] * 2)
-    if (tiles.tileAtLocationEquals(locationInDirection, assets.tile`myTile0`) || tiles.tileAtLocationEquals(locationInDirection, sprites.dungeon.stairLadder)) {
+    if (tiles.tileAtLocationEquals(locationInDirection, assets.tile`myTile2`) || tiles.tileAtLocationEquals(locationInDirection, assets.tile`myTile1`)) {
         if (!(tiles.tileAtLocationIsWall(pushedLocationInDirection))) {
-            if (tiles.tileAtLocationEquals(locationInDirection, assets.tile`myTile0`)) {
+            if (tiles.tileAtLocationEquals(locationInDirection, assets.tile`myTile2`)) {
                 tiles.setTileAt(locationInDirection, assets.tile`myTile`)
             } else {
                 tiles.setTileAt(locationInDirection, sprites.dungeon.floorDark2)
             }
             tiles.setWallAt(locationInDirection, false)
             if (tiles.tileAtLocationEquals(pushedLocationInDirection, assets.tile`myTile`)) {
-                tiles.setTileAt(pushedLocationInDirection, assets.tile`myTile0`)
+                tiles.setTileAt(pushedLocationInDirection, assets.tile`myTile2`)
             } else {
-                tiles.setTileAt(pushedLocationInDirection, sprites.dungeon.stairLadder)
+                tiles.setTileAt(pushedLocationInDirection, assets.tile`myTile1`)
             }
             tiles.setWallAt(pushedLocationInDirection, true)
             return true
@@ -28,7 +28,13 @@ function checkWin () {
         game.over(true)
     }
 }
+function enterBox (direction: number) {
+    mainLevelTileMap = tiles.getLoadedMap()
+    currentTilemapChange = 1
+    tiles.loadMap(tiles.createMap(tilemap`SubBoxInLevel4`))
+}
 function onDirectionButtonDown (direction: number, spriteImage: Image) {
+    currentDirection = direction
     if (canMove) {
         playerSprite.setImage(spriteImage)
         if (checkWall(direction)) {
@@ -37,6 +43,8 @@ function onDirectionButtonDown (direction: number, spriteImage: Image) {
                     info.changeScoreBy(1)
                     grid.move(playerSprite, DIRECTION_VECTORS[direction][0], DIRECTION_VECTORS[direction][1])
                     checkWin()
+                } else if (enterBoxIfPossible(direction)) {
+                	
                 }
             }
         } else {
@@ -97,12 +105,40 @@ function initConstants () {
     LEFT
     ]
 }
+function enterBoxIfPossible (direction: number) {
+    locationInDirection = grid.add(grid.getLocation(playerSprite), DIRECTION_VECTORS[direction][0], DIRECTION_VECTORS[direction][1])
+    if (tiles.tileAtLocationEquals(locationInDirection, assets.tile`myTile2`) || tiles.tileAtLocationEquals(locationInDirection, assets.tile`myTile1`)) {
+        if (direction == 1 || direction == 2) {
+            enterBox(direction)
+            return true
+        }
+    }
+    return false
+}
+tiles.onMapLoaded(function (tilemap2) {
+    if (currentTilemapChange == 0) {
+        grid.place(playerSprite, tiles.getTileLocation(2, 3))
+    } else if (currentTilemapChange == 1) {
+        if (currentDirection == 1) {
+            grid.place(playerSprite, tiles.getTileLocation(1, 5))
+        } else {
+            grid.place(playerSprite, tiles.getTileLocation(5, 1))
+        }
+    } else {
+        subBoxTile = tiles.getTilesByType(assets.tile`myTile1`)[0]
+        if (currentDirection == 0) {
+            grid.place(playerSprite, tiles.getTileLocation(subBoxTile.column, subBoxTile.row - 1))
+        } else {
+            grid.place(playerSprite, tiles.getTileLocation(subBoxTile.column - 1, subBoxTile.row))
+        }
+    }
+})
 // 0 - up
 // 1 - right
 // 2 - down 
 // 3 - left
 function checkBox (direction: number) {
-    return tiles.tileAtLocationEquals(grid.add(grid.getLocation(playerSprite), DIRECTION_VECTORS[direction][0], DIRECTION_VECTORS[direction][1]), assets.tile`myTile0`) || tiles.tileAtLocationEquals(grid.add(grid.getLocation(playerSprite), DIRECTION_VECTORS[direction][0], DIRECTION_VECTORS[direction][1]), sprites.dungeon.stairLadder)
+    return tiles.tileAtLocationEquals(grid.add(grid.getLocation(playerSprite), DIRECTION_VECTORS[direction][0], DIRECTION_VECTORS[direction][1]), assets.tile`myTile2`) || tiles.tileAtLocationEquals(grid.add(grid.getLocation(playerSprite), DIRECTION_VECTORS[direction][0], DIRECTION_VECTORS[direction][1]), assets.tile`myTile1`)
 }
 controller.right.onEvent(ControllerButtonEvent.Pressed, function () {
     onDirectionButtonDown(1, img`
@@ -124,6 +160,13 @@ controller.right.onEvent(ControllerButtonEvent.Pressed, function () {
         . . . . . . . f f f . . . . . . 
         `)
 })
+scene.onOverlapTile(SpriteKind.Player, assets.tile`myTile3`, function (sprite, location) {
+    moveOutOfBox(currentDirection)
+})
+function moveOutOfBox (direction: number) {
+    currentTilemapChange = 2
+    tiles.loadMap(mainLevelTileMap)
+}
 controller.left.onEvent(ControllerButtonEvent.Pressed, function () {
     onDirectionButtonDown(3, img`
         . . . . f f f f f f . . . . . . 
@@ -151,17 +194,21 @@ controller.left.onEvent(ControllerButtonEvent.Pressed, function () {
 function checkWall (direction: number) {
     return tiles.tileAtLocationIsWall(grid.add(grid.getLocation(playerSprite), DIRECTION_VECTORS[direction][0], DIRECTION_VECTORS[direction][1]))
 }
+let subBoxTile: tiles.Location = null
 let LEFT: number[] = []
 let DOWN: number[] = []
 let RIGHT: number[] = []
 let UP: number[] = []
+let currentDirection = 0
+let mainLevelTileMap: tiles.WorldMap = null
 let pushedLocationInDirection: tiles.Location = null
 let DIRECTION_VECTORS: number[][] = []
 let locationInDirection: tiles.Location = null
 let canMove = false
 let playerSprite: Sprite = null
+let currentTilemapChange = 0
 initConstants()
-tiles.setCurrentTilemap(tilemap`level3`)
+currentTilemapChange = 0
 playerSprite = sprites.create(img`
     . . . . . . f f f f f f . . . . 
     . . . . f f e e e e f 2 f . . . 
@@ -180,6 +227,6 @@ playerSprite = sprites.create(img`
     . . . . . . f f f f f f . . . . 
     . . . . . . . f f f . . . . . . 
     `, SpriteKind.Player)
-grid.place(playerSprite, tiles.getTileLocation(6, 4))
+tiles.loadMap(tiles.createMap(tilemap`level4`))
 canMove = true
 info.setScore(0)
