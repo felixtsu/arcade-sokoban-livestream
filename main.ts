@@ -115,27 +115,9 @@ function enterBoxIfPossible (direction: number) {
     }
     return false
 }
-tiles.onMapLoaded(function (tilemap2) {
-    if (currentTilemapChange == 0) {
-        grid.place(playerSprite, tiles.getTileLocation(2, 3))
-    } else if (currentTilemapChange == 1) {
-        if (currentDirection == 1) {
-            grid.place(playerSprite, tiles.getTileLocation(1, 5))
-        } else {
-            grid.place(playerSprite, tiles.getTileLocation(5, 1))
-        }
-    } else {
-        subBoxTile = tiles.getTilesByType(assets.tile`myTile1`)[0]
-        if (currentDirection == 0) {
-            grid.place(playerSprite, tiles.getTileLocation(subBoxTile.column, subBoxTile.row - 1))
-        } else {
-            grid.place(playerSprite, tiles.getTileLocation(subBoxTile.column - 1, subBoxTile.row))
-        }
-    }
-})
 // 0 - up
 // 1 - right
-// 2 - down 
+// 2 - down
 // 3 - left
 function checkBox (direction: number) {
     return tiles.tileAtLocationEquals(grid.add(grid.getLocation(playerSprite), DIRECTION_VECTORS[direction][0], DIRECTION_VECTORS[direction][1]), assets.tile`myTile2`) || tiles.tileAtLocationEquals(grid.add(grid.getLocation(playerSprite), DIRECTION_VECTORS[direction][0], DIRECTION_VECTORS[direction][1]), assets.tile`myTile1`)
@@ -163,6 +145,24 @@ controller.right.onEvent(ControllerButtonEvent.Pressed, function () {
 scene.onOverlapTile(SpriteKind.Player, assets.tile`myTile3`, function (sprite, location) {
     moveOutOfBox(currentDirection)
 })
+tiles.onMapLoaded(function (tilemap2) {
+    if (currentTilemapChange == 0) {
+        grid.place(playerSprite, tiles.getTileLocation(2, 3))
+    } else if (currentTilemapChange == 1) {
+        if (currentDirection == 1) {
+            grid.place(playerSprite, tiles.getTileLocation(1, 5))
+        } else {
+            grid.place(playerSprite, tiles.getTileLocation(5, 1))
+        }
+    } else {
+        subBoxTile = tiles.getTilesByType(assets.tile`myTile1`)[0]
+        if (currentDirection == 0) {
+            grid.place(playerSprite, tiles.getTileLocation(subBoxTile.column, subBoxTile.row - 1))
+        } else {
+            grid.place(playerSprite, tiles.getTileLocation(subBoxTile.column - 1, subBoxTile.row))
+        }
+    }
+})
 function moveOutOfBox (direction: number) {
     currentTilemapChange = 2
     tiles.loadMap(mainLevelTileMap)
@@ -189,7 +189,7 @@ controller.left.onEvent(ControllerButtonEvent.Pressed, function () {
 })
 // 0 - up
 // 1 - right
-// 2 - down 
+// 2 - down
 // 3 - left
 function checkWall (direction: number) {
     return tiles.tileAtLocationIsWall(grid.add(grid.getLocation(playerSprite), DIRECTION_VECTORS[direction][0], DIRECTION_VECTORS[direction][1]))
