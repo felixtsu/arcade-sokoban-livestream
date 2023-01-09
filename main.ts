@@ -21,7 +21,7 @@ function pushIfPossible (direction: number) {
     return false
 }
 function checkWin () {
-    if (tiles.getTilesByType(assets.tile`myTile`).length == 0) {
+    if (emptyTargetTile == 0) {
         canMove = false
         playerSprite.sayText("Yay~")
         pause(1000)
@@ -39,7 +39,7 @@ function onDirectionButtonDown (direction: number, spriteImage: Image) {
         playerSprite.setImage(spriteImage)
         if (checkWall(direction)) {
             if (checkBox(direction)) {
-                if (pushIfPossible(direction)) {
+                if (pushIfPossibleMultipleBox(direction, grid.spriteCol(playerSprite), grid.spriteRow(playerSprite))) {
                     info.changeScoreBy(1)
                     grid.move(playerSprite, DIRECTION_VECTORS[direction][0], DIRECTION_VECTORS[direction][1])
                     checkWin()
@@ -106,8 +106,8 @@ function initConstants () {
     ]
 }
 function enterBoxIfPossible (direction: number) {
-    locationInDirection = grid.add(grid.getLocation(playerSprite), DIRECTION_VECTORS[direction][0], DIRECTION_VECTORS[direction][1])
-    if (tiles.tileAtLocationEquals(locationInDirection, assets.tile`myTile2`) || tiles.tileAtLocationEquals(locationInDirection, assets.tile`myTile1`)) {
+    locationInDirection2 = grid.add(grid.getLocation(playerSprite), DIRECTION_VECTORS[direction][0], DIRECTION_VECTORS[direction][1])
+    if (tiles.tileAtLocationEquals(locationInDirection2, assets.tile`myTile2`) || tiles.tileAtLocationEquals(locationInDirection2, assets.tile`myTile1`)) {
         if (direction == 1 || direction == 2) {
             enterBox(direction)
             return true
@@ -120,7 +120,16 @@ function enterBoxIfPossible (direction: number) {
 // 2 - down
 // 3 - left
 function checkBox (direction: number) {
-    return tiles.tileAtLocationEquals(grid.add(grid.getLocation(playerSprite), DIRECTION_VECTORS[direction][0], DIRECTION_VECTORS[direction][1]), assets.tile`myTile2`) || tiles.tileAtLocationEquals(grid.add(grid.getLocation(playerSprite), DIRECTION_VECTORS[direction][0], DIRECTION_VECTORS[direction][1]), assets.tile`myTile1`)
+    directionTileColumn = DIRECTION_VECTORS[direction][0]
+    directionTileRow = DIRECTION_VECTORS[direction][1]
+    return tiles.tileAtLocationEquals(grid.add(grid.getLocation(playerSprite), directionTileColumn, directionTileRow), assets.tile`myTile2`) || tiles.tileAtLocationEquals(grid.add(grid.getLocation(playerSprite), directionTileColumn, directionTileRow), assets.tile`myTile1`) || (tiles.tileAtLocationEquals(grid.add(grid.getLocation(playerSprite), directionTileColumn, directionTileRow), assets.tile`myTile0`) || tiles.tileAtLocationEquals(grid.add(grid.getLocation(playerSprite), directionTileColumn, directionTileRow), sprites.dungeon.stairLadder))
+}
+// 0 - up
+// 1 - right
+// 2 - down
+// 3 - left
+function checkBoxAtLocation (column: number, row: number) {
+    return tiles.tileAtLocationEquals(tiles.getTileLocation(column, row), assets.tile`myTile2`) || tiles.tileAtLocationEquals(tiles.getTileLocation(column, row), assets.tile`myTile1`) || (tiles.tileAtLocationEquals(tiles.getTileLocation(column, row), assets.tile`myTile0`) || tiles.tileAtLocationEquals(tiles.getTileLocation(column, row), sprites.dungeon.stairLadder))
 }
 controller.right.onEvent(ControllerButtonEvent.Pressed, function () {
     onDirectionButtonDown(1, img`
@@ -147,22 +156,94 @@ scene.onOverlapTile(SpriteKind.Player, assets.tile`myTile3`, function (sprite, l
 })
 tiles.onMapLoaded(function (tilemap2) {
     if (currentTilemapChange == 0) {
-        grid.place(playerSprite, tiles.getTileLocation(2, 3))
+        grid.place(playerSprite, tiles.getTileLocation(3, 4))
     } else if (currentTilemapChange == 1) {
         if (currentDirection == 1) {
-            grid.place(playerSprite, tiles.getTileLocation(1, 5))
+            if (boxEntered == 1) {
+                tiles.setTileAt(tiles.getTileLocation(2, 5), sprites.dungeon.stairLadder)
+                tiles.setWallAt(tiles.getTileLocation(2, 5), true)
+                grid.place(playerSprite, tiles.getTileLocation(1, 5))
+            } else {
+                grid.place(playerSprite, tiles.getTileLocation(1, 5))
+            }
         } else {
             grid.place(playerSprite, tiles.getTileLocation(5, 1))
         }
     } else {
         subBoxTile = tiles.getTilesByType(assets.tile`myTile1`)[0]
         if (currentDirection == 0) {
+            if (boxEntered == 2) {
+                emptyTargetTile += -1
+                tiles.setTileAt(tiles.getTileLocation(subBoxTile.column, subBoxTile.row - 2), assets.tile`myTile0`)
+                tiles.setWallAt(tiles.getTileLocation(subBoxTile.column, subBoxTile.row - 2), true)
+            }
             grid.place(playerSprite, tiles.getTileLocation(subBoxTile.column, subBoxTile.row - 1))
         } else {
             grid.place(playerSprite, tiles.getTileLocation(subBoxTile.column - 1, subBoxTile.row))
         }
     }
 })
+function pushIfPossibleMultipleBox (direction: number, col: number, row: number) {
+    pushedBoxCandidates = []
+    locationInDirection = grid.add(tiles.getTileLocation(col, row), DIRECTION_VECTORS[direction][0], DIRECTION_VECTORS[direction][1])
+    pushedLocationInDirection = grid.add(tiles.getTileLocation(col, row), DIRECTION_VECTORS[direction][0] * 2, DIRECTION_VECTORS[direction][1] * 2)
+    while (!(tiles.tileAtLocationEquals(pushedLocationInDirection, assets.tile`transparency16`))) {
+        if (tiles.tileAtLocationEquals(pushedLocationInDirection, sprites.dungeon.floorDark2) || tiles.tileAtLocationEquals(pushedLocationInDirection, assets.tile`myTile`)) {
+            if (tiles.tileAtLocationEquals(pushedLocationInDirection, assets.tile`myTile`)) {
+                emptyTargetTile += -1
+                if (tiles.tileAtLocationEquals(locationInDirection, sprites.dungeon.stairLadder)) {
+                    tiles.setTileAt(pushedLocationInDirection, assets.tile`myTile0`)
+                } else {
+                    tiles.setTileAt(pushedLocationInDirection, assets.tile`myTile2`)
+                }
+            } else {
+                tiles.setTileAt(pushedLocationInDirection, tiles.tileImageAtLocation(locationInDirection))
+            }
+            tiles.setWallAt(pushedLocationInDirection, true)
+            for (let index = 0; index <= pushedBoxCandidates.length - 1; index++) {
+                pushedBox = pushedBoxCandidates.pop()
+                pushedLocationInDirection = grid.add(pushedLocationInDirection, 0 - DIRECTION_VECTORS[direction][0], 0 - DIRECTION_VECTORS[direction][1])
+                tiles.setTileAt(pushedLocationInDirection, tiles.tileImageAtLocation(pushedBox))
+                tiles.setWallAt(pushedLocationInDirection, true)
+            }
+            pushedLocationInDirection = grid.add(pushedLocationInDirection, 0 - DIRECTION_VECTORS[direction][0], 0 - DIRECTION_VECTORS[direction][1])
+            if (tiles.tileAtLocationEquals(pushedLocationInDirection, sprites.dungeon.stairLadder) || tiles.tileAtLocationEquals(pushedLocationInDirection, assets.tile`myTile1`)) {
+                tiles.setTileAt(pushedLocationInDirection, sprites.dungeon.floorDark2)
+            } else {
+                tiles.setTileAt(pushedLocationInDirection, assets.tile`myTile`)
+            }
+            tiles.setWallAt(pushedLocationInDirection, false)
+            return true
+        } else if (checkBoxAtLocation(pushedLocationInDirection.column, pushedLocationInDirection.row)) {
+            pushedBoxCandidates.push(locationInDirection)
+        }
+        locationInDirection = grid.add(locationInDirection, DIRECTION_VECTORS[direction][0], DIRECTION_VECTORS[direction][1])
+        pushedLocationInDirection = grid.add(pushedLocationInDirection, DIRECTION_VECTORS[direction][0], DIRECTION_VECTORS[direction][1])
+    }
+    pushedLocationInDirection = grid.add(pushedLocationInDirection, 0 - DIRECTION_VECTORS[direction][0], 0 - DIRECTION_VECTORS[direction][1])
+    if (!(tiles.tileAtLocationEquals(pushedLocationInDirection, assets.tile`myTile4`))) {
+        boxEntered = 2
+        locationInDirection = grid.add(locationInDirection, 0 - DIRECTION_VECTORS[direction][0], 0 - DIRECTION_VECTORS[direction][1])
+        tiles.setTileAt(locationInDirection, sprites.dungeon.floorDark2)
+        return true
+    }
+    pushedLocationInDirection = grid.add(pushedLocationInDirection, 0 - DIRECTION_VECTORS[direction][0], 0 - DIRECTION_VECTORS[direction][1])
+    pushedBoxCandidates.push(locationInDirection)
+    if (pushedBoxCandidates.length > 1 && (tiles.tileAtLocationEquals(pushedLocationInDirection, assets.tile`myTile2`) || tiles.tileAtLocationEquals(pushedLocationInDirection, assets.tile`myTile1`))) {
+        for (let index2 = 0; index2 <= pushedBoxCandidates.length - 1; index2++) {
+            info.changeLifeBy(10)
+            pushedBox = pushedBoxCandidates.pop()
+            pushedLocationInDirection = grid.add(pushedLocationInDirection, 0 - DIRECTION_VECTORS[direction][0], 0 - DIRECTION_VECTORS[direction][1])
+            tiles.setTileAt(pushedLocationInDirection, tiles.tileImageAtLocation(pushedBox))
+            tiles.setWallAt(pushedLocationInDirection, true)
+        }
+        tiles.setTileAt(pushedLocationInDirection, sprites.dungeon.floorDark2)
+        tiles.setWallAt(pushedLocationInDirection, false)
+        boxEntered = 1
+        return true
+    }
+    return false
+}
 function moveOutOfBox (direction: number) {
     currentTilemapChange = 2
     tiles.loadMap(mainLevelTileMap)
@@ -194,7 +275,13 @@ controller.left.onEvent(ControllerButtonEvent.Pressed, function () {
 function checkWall (direction: number) {
     return tiles.tileAtLocationIsWall(grid.add(grid.getLocation(playerSprite), DIRECTION_VECTORS[direction][0], DIRECTION_VECTORS[direction][1]))
 }
+let pushedBox: tiles.Location = null
+let pushedBoxCandidates: tiles.Location[] = []
 let subBoxTile: tiles.Location = null
+let boxEntered = 0
+let directionTileRow = 0
+let directionTileColumn = 0
+let locationInDirection2: tiles.Location = null
 let LEFT: number[] = []
 let DOWN: number[] = []
 let RIGHT: number[] = []
@@ -206,9 +293,11 @@ let DIRECTION_VECTORS: number[][] = []
 let locationInDirection: tiles.Location = null
 let canMove = false
 let playerSprite: Sprite = null
+let emptyTargetTile = 0
 let currentTilemapChange = 0
 initConstants()
 currentTilemapChange = 0
+emptyTargetTile = 2
 playerSprite = sprites.create(img`
     . . . . . . f f f f f f . . . . 
     . . . . f f e e e e f 2 f . . . 
@@ -227,6 +316,7 @@ playerSprite = sprites.create(img`
     . . . . . . f f f f f f . . . . 
     . . . . . . . f f f . . . . . . 
     `, SpriteKind.Player)
+scene.cameraFollowSprite(playerSprite)
 tiles.loadMap(tiles.createMap(tilemap`level4`))
 canMove = true
 info.setScore(0)
